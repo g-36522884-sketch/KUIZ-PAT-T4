@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎮 Kuiz SPM Pendidikan Islam Tingkatan 4</title>
+
+<style>
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:'Segoe UI',sans-serif;
+}
+
+body{
+background:linear-gradient(135deg,#0f766e,#14b8a6);
+min-height:100vh;
+padding:20px;
+display:flex;
+justify-content:center;
+align-items:center;
+}
+
+.container{
+background:white;
+width:100%;
+max-width:900px;
+padding:25px;
+border-radius:20px;
+box-shadow:0 8px 25px rgba(0,0,0,0.25);
+}
+
+h1{
+text-align:center;
+color:#0f766e;
+margin-bottom:15px;
+}
+
+.topbar{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:15px;
+font-weight:bold;
+}
+
+.progress-container{
+width:100%;
+height:18px;
+background:#ddd;
+border-radius:20px;
+margin-bottom:20px;
+overflow:hidden;
+}
+
+.progress{
+height:100%;
+width:0%;
+background:linear-gradient(90deg,#10b981,#22c55e);
+transition:0.4s;
+}
+
+.question{
+font-size:22px;
+font-weight:bold;
+margin-bottom:20px;
+}
+
+.option{
+display:block;
+padding:15px;
+margin-bottom:12px;
+background:#f1f5f9;
+border-radius:12px;
+cursor:pointer;
+transition:0.3s;
+border:2px solid transparent;
+}
+
+.option:hover{
+background:#d1fae5;
+}
+
+.selected{
+border:2px solid #0f766e;
+background:#ccfbf1;
+}
+
+button{
+background:#0f766e;
+color:white;
+padding:12px 20px;
+border:none;
+border-radius:10px;
+font-size:16px;
+cursor:pointer;
+margin-top:10px;
+}
+
+button:hover{
+background:#115e59;
+}
+
+#feedback{
+margin-top:15px;
+font-size:20px;
+font-weight:bold;
+}
+
+.correct{
+color:green;
+}
+
+.wrong{
+color:red;
+}
+
+#explanation{
+display:none;
+margin-top:10px;
+padding:15px;
+background:#ecfeff;
+border-left:5px solid #06b6d4;
+border-radius:10px;
+}
+
+.result{
+text-align:center;
+}
+
+.result h2{
+color:#0f766e;
+margin-bottom:20px;
+}
+
+.badge{
+font-size:80px;
+}
+
+@media(max-width:600px){
+.question{
+font-size:18px;
+}
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>🎮 Kuiz SPM Pendidikan Islam Tingkatan 4</h1>
+
+<div class="topbar">
+<div>📊 Skor: <span id="score">0</span></div>
+<div>❤️ Nyawa: <span id="lives">3</span></div>
+</div>
+
+<div class="progress-container">
+<div id="progress" class="progress"></div>
+</div>
+
+<div id="quizArea">
+<div id="question" class="question"></div>
+<div id="options"></div>
+
+<button onclick="checkAnswer()">✅ Semak Jawapan</button>
+
+<div id="feedback"></div>
+<div id="explanation"></div>
+</div>
+
+</div>
+
+<script>
+
+const correctSound=new Audio("https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg");
+const wrongSound=new Audio("https://actions.google.com/sounds/v1/cartoon/boing.ogg");
+
+let currentQuestion=0;
+let score=0;
+let lives=3;
+let selected=null;
+
+const questions=[
+
+{
+q:"Apakah maksud riba?",
+options:["Pertambahan bayaran dalam urusan pertukaran barang dan hutang piutang","Jual beli tunai","Pemberian hadiah","Perniagaan"],
+answer:0,
+ex:"Riba ialah pertambahan bayaran dalam urusan pertukaran barang dan hutang piutang."
+},
+
+{
+q:"Antara berikut yang manakah dosa besar?",
+options:["Lupa salam","Syirik","Tertidur","Tersalah tajwid"],
+answer:1,
+ex:"Syirik ialah dosa besar yang paling utama."
+},
+
+{
+q:"Apakah maksud Al-Muntaqim?",
+options:["Maha Pengampun","Maha Pembalas","Maha Mengetahui","Maha Pemurah"],
+answer:1,
+ex:"Al-Muntaqim bermaksud Allah SWT Yang Maha Membalas."
+},
+
+{
+q:"Allah membalas orang yang ingkar menunjukkan sifat?",
+options:["Ar-Rahman","Al-Quddus","Al-Muntaqim","Al-Khaliq"],
+answer:2,
+ex:"Pembalasan terhadap orang yang ingkar menunjukkan sifat Al-Muntaqim."
+},
+
+{
+q:"Contoh iktikad membatalkan iman ialah?",
+options:["Percaya malaikat","Percaya qada dan qadar","Meyakini kuasa lain setanding Allah","Percaya rasul"],
+answer:2,
+ex:"Meyakini kuasa selain Allah setanding-Nya membatalkan iman."
+},
+
+{
+q:"Iman terbatal apabila dilakukan secara?",
+options:["Terlupa","Dipaksa","Sengaja","Tidak tahu"],
+answer:2,
+ex:"Perkara kufur yang dilakukan secara sengaja boleh membatalkan iman."
+},
+
+{
+q:"Cara mengelakkan terbatal iman ialah?",
+options:["Mendalami ilmu akidah","Kurang membaca al-Quran","Menjauhi masjid","Mengabaikan ilmu"],
+answer:0,
+ex:"Ilmu akidah membantu menjaga iman."
+},
+
+{
+q:"Apakah hukum korban?",
+options:["Wajib","Sunat Muakkad","Makruh","Haram"],
+answer:1,
+ex:"Korban hukumnya sunat muakkad bagi yang mampu."
+},
+
+{
+q:"Korban dilakukan pada?",
+options:["Ramadan","Muharam","10 Zulhijjah hingga akhir hari Tasyrik","Safar"],
+answer:2,
+ex:"Tempoh korban bermula selepas solat Aidiladha sehingga akhir hari Tasyrik."
+},
+
+{
+q:"Amalan sunat semasa korban ialah?",
+options:["Menghadap kiblat","Alat tumpul","Menjual daging","Menyeksa haiwan"],
+answer:0,
+ex:"Menghadap kiblat ialah amalan sunat ketika korban."
+},
+
+{
+q:"Solat sunat gerhana dilakukan ketika?",
+options:["Hujan","Petir","Gerhana matahari atau bulan","Gempa bumi"],
+answer:2,
+ex:"Solat gerhana dilakukan ketika berlaku gerhana."
+},
+
+{
+q:"Amalan yang digalakkan ketika gerhana?",
+options:["Bermain","Berdoa","Tidur","Membeli-belah"],
+answer:1,
+ex:"Umat Islam digalakkan berdoa dan berzikir."
+},
+
+{
+q:"Hikmah solat gerhana ialah?",
+options:["Menjadi kaya","Popular","Menginsafi kekuasaan Allah","Mendapat hadiah"],
+answer:2,
+ex:"Gerhana mengingatkan manusia terhadap kekuasaan Allah."
+},
+
+{
+q:"Pengasas Kerajaan Umaiyah ialah?",
+options:["Abu Bakar","Umar","Muawiyah","Ali"],
+answer:2,
+ex:"Muawiyah bin Abi Sufian merupakan pengasas Kerajaan Umaiyah."
+},
+
+{
+q:"Pusat pemerintahan Umaiyah ialah?",
+options:["Makkah","Madinah","Damsyik","Kufah"],
+answer:2,
+ex:"Damsyik menjadi pusat pemerintahan Umaiyah."
+},
+
+{
+q:"Bilangan khalifah Umaiyah ialah?",
+options:["10","12","14","20"],
+answer:2,
+ex:"Kerajaan Umaiyah mempunyai 14 khalifah."
+},
+
+{
+q:"Khalifah terakhir Umaiyah ialah?",
+options:["Yazid","Marwan bin Muhammad","Umar Abdul Aziz","Walid"],
+answer:1,
+ex:"Marwan bin Muhammad ialah khalifah terakhir Umaiyah."
+},
+
+{
+q:"Khalifah yang terkenal dengan keadilan ialah?",
+options:["Yazid","Walid","Umar bin Abdul Aziz","Muawiyah II"],
+answer:2,
+ex:"Umar bin Abdul Aziz terkenal dengan keadilan."
+},
+
+{
+q:"Sumbangan Umar bin Abdul Aziz ialah?",
+options:["Mengasaskan Dewan Penasihat","Menutup masjid","Mengharamkan hadis","Memansuhkan zakat"],
+answer:0,
+ex:"Beliau menubuhkan Dewan Penasihat yang terdiri daripada ulama."
+},
+
+{
+q:"Imam Abu Hanifah ialah pengasas?",
+options:["Maliki","Hanbali","Syafii","Hanafi"],
+answer:3,
+ex:"Beliau merupakan pengasas Mazhab Hanafi."
+},
+
+{
+q:"Nama sebenar Imam Abu Hanifah ialah?",
+options:["Muhammad Idris","Nu'man bin Thabit","Malik bin Anas","Ahmad bin Hanbal"],
+answer:1,
+ex:"Nama sebenar beliau ialah Nu'man bin Thabit."
+},
+
+{
+q:"Karya terkenal Imam Abu Hanifah ialah?",
+options:["Al-Umm","Al-Muwatta","Fiqh Al-Akbar","Musnad Ahmad"],
+answer:2,
+ex:"Fiqh Al-Akbar antara karya penting beliau."
+},
+
+{
+q:"Apakah maksud khauf?",
+options:["Takut azab Allah","Takut manusia","Takut peperiksaan","Takut gelap"],
+answer:0,
+ex:"Khauf ialah takut kepada kemurkaan dan azab Allah."
+},
+
+{
+q:"Khauf mendorong seseorang?",
+options:["Maksiat","Lalai","Menjauhi dosa","Sombong"],
+answer:2,
+ex:"Khauf menjadikan seseorang menjauhi maksiat."
+},
+
+{
+q:"Khauf melahirkan individu yang?",
+options:["Cuai","Bertanggungjawab","Malas","Zalim"],
+answer:1,
+ex:"Khauf membentuk individu bertanggungjawab."
+},
+
+{
+q:"Maksud keadilan ialah?",
+options:["Meletakkan sesuatu pada tempatnya","Menghukum tanpa bukti","Keras","Pilih kasih"],
+answer:0,
+ex:"Keadilan ialah meletakkan sesuatu pada tempat yang betul."
+},
+
+{
+q:"Contoh keadilan ialah?",
+options:["Memberi hak kepada yang berhak","Mengabaikan hak","Memilih kasih","Menipu"],
+answer:0,
+ex:"Hak hendaklah diberikan kepada yang berhak."
+},
+
+{
+q:"Maksud wasatiyyah ialah?",
+options:["Melampau","Sederhana dan seimbang","Ekstrem","Bebas"],
+answer:1,
+ex:"Wasatiyyah bermaksud sederhana dan seimbang."
+},
+
+{
+q:"Contoh wasatiyyah di sekolah ialah?",
+options:["Ponteng","Belajar bersungguh-sungguh","Membuli","Malas"],
+answer:1,
+ex:"Belajar bersungguh-sungguh ialah amalan wasatiyyah."
+},
+
+{
+q:"Cara menjaga kesucian Islam?",
+options:["Menghina agama","Meningkatkan ibadah","Meninggalkan solat","Mempersenda syariat"],
+answer:1,
+ex:"Meningkatkan ibadah membantu menjaga kesucian Islam."
+},
+
+{
+q:"Perbuatan mempersendakan agama ialah?",
+options:["Menyanjung maksiat","Berzikir","Bersedekah","Membaca al-Quran"],
+answer:0,
+ex:"Menyanjung maksiat termasuk mempersendakan agama."
+},
+
+{
+q:"Pengajaran daripada larangan mempersendakan agama ialah?",
+options:["Pertahankan Islam","Ikut hawa nafsu","Perlekeh syariat","Tinggalkan dakwah"],
+answer:0,
+ex:"Kita wajib mempertahankan kesucian Islam."
+},
+
+{
+q:"Keburukan riba ialah?",
+options:["Ekonomi stabil","Ukhuwah kuat","Penindasan berlaku","Masyarakat harmoni"],
+answer:2,
+ex:"Riba menyebabkan penindasan dan ketidakadilan."
+},
+
+{
+q:"Siapakah yang membukukan hadis atas arahan Umar bin Abdul Aziz?",
+options:["Imam Malik","Ibnu Syihab al-Zuhri","Imam Muslim","Imam Syafii"],
+answer:1,
+ex:"Ibnu Syihab al-Zuhri diarahkan mengumpul hadis."
+},
+
+{
+q:"Amalan yang digalakkan ketika gerhana ialah?",
+options:["Tidur","Bersedekah","Bermain","Bersantai"],
+answer:1,
+ex:"Bersedekah dan berdoa amat digalakkan."
+},
+
+{
+q:"Tujuan korban ialah?",
+options:["Bermegah","Keuntungan","Mendekatkan diri kepada Allah","Pertandingan"],
+answer:2,
+ex:"Korban ialah ibadah untuk mendekatkan diri kepada Allah."
+},
+
+{
+q:"Cara mengukuhkan iman ialah?",
+options:["Meninggalkan ibadah","Mengikut nafsu","Melakukan amalan soleh","Mengabaikan ilmu"],
+answer:2,
+ex:"Amalan soleh membantu mengukuhkan iman."
+},
+
+{
+q:"Iman akan bertambah dengan?",
+options:["Maksiat","Ketaatan","Kemungkaran","Kezaliman"],
+answer:1,
+ex:"Iman bertambah melalui ketaatan kepada Allah SWT."
+},
+
+{
+q:"Apakah sumber utama hukum Islam?",
+options:["Akal","Adat","Al-Quran","Budaya"],
+answer:2,
+ex:"Al-Quran ialah sumber utama hukum Islam."
+},
+
+{
+q:"Apakah tujuan mempelajari Pendidikan Islam?",
+options:["Mendapat ilmu dan akhlak mulia","Populariti","Kemasyhuran","Hiburan"],
+answer:0,
+ex:"Pendidikan Islam membentuk insan berilmu dan berakhlak."
+}
+
+];
+
+function loadQuestion(){
+
+let q=questions[currentQuestion];
+
+document.getElementById("question").innerHTML=
+`Soalan ${currentQuestion+1}/${questions.length}<br><br>${q.q}`;
+
+let html="";
+
+q.options.forEach((opt,index)=>{
+html+=`
+<div class="option" onclick="selectOption(this,${index})">
+${String.fromCharCode(65+index)}. ${opt}
+</div>`;
+});
+
+document.getElementById("options").innerHTML=html;
+
+document.getElementById("feedback").innerHTML="";
+document.getElementById("explanation").style.display="none";
+
+let progress=(currentQuestion/questions.length)*100;
+document.getElementById("progress").style.width=progress+"%";
+}
+
+function selectOption(element,index){
+
+document.querySelectorAll(".option")
+.forEach(opt=>opt.classList.remove("selected"));
+
+element.classList.add("selected");
+selected=index;
+}
+
+function checkAnswer(){
+
+if(selected===null){
+alert("Sila pilih jawapan.");
+return;
+}
+
+const q=questions[currentQuestion];
+
+if(selected===q.answer){
+
+score++;
+document.getElementById("feedback").innerHTML="✅ BETUL";
+document.getElementById("feedback").className="correct";
+
+try{correctSound.play();}catch(e){}
+
+}else{
+
+lives--;
+
+document.getElementById("feedback").innerHTML="❌ SALAH";
+document.getElementById("feedback").className="wrong";
+
+try{wrongSound.play();}catch(e){}
+
+document.getElementById("lives").innerHTML=lives;
+
+if(lives<=0){
+endGame();
+return;
+}
+}
+
+document.getElementById("score").innerHTML=score;
+
+document.getElementById("explanation").style.display="block";
+document.getElementById("explanation").innerHTML=
+"<strong>Penerangan:</strong> "+q.ex;
+
+setTimeout(()=>{
+
+currentQuestion++;
+
+if(currentQuestion>=questions.length){
+endGame();
+}else{
+selected=null;
+loadQuestion();
+}
+
+},3000);
+
+}
+
+function endGame(){
+
+let badge="🥉";
+
+if(score>=35) badge="🥇";
+else if(score>=25) badge="🥈";
+
+document.querySelector(".container").innerHTML=`
+
+<div class="result">
+
+<div class="badge">${badge}</div>
+
+<h2>Tahniah!</h2>
+
+<h1>${score} / ${questions.length}</h1>
+
+<h3>Pencapaian Anda</h3>
+
+<p>
+${score>=35 ?
+"Cemerlang 🌟" :
+score>=25 ?
+"Baik 👍" :
+"Perlu Lagi Latihan 💪"}
+</p>
+
+<br>
+
+<button onclick="location.reload()">
+🔄 Main Semula
+</button>
+
+</div>
+`;
+}
+
+loadQuestion();
+
+</script>
+
+</body>
+</html>
